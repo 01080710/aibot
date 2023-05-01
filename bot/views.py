@@ -6,7 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from linebot import LineBotApi, WebhookHandler, WebhookParser
 from linebot.exceptions import InvalidSignatureError, LineBotApiError
-from linebot.models import MessageEvent, TextSendMessage,ImageSendMessage
+from linebot.models import MessageEvent, TextSendMessage, ImageSendMessage
 from bs4 import BeautifulSoup
 import requests
 
@@ -14,30 +14,33 @@ line_bot_api = LineBotApi(settings.LINE_CHANNEL_ACCESS_TOKEN)
 parse = WebhookParser(settings.LINE_CHANNEL_SECRET)
 
 
-def BigLottery():
+def get_biglottery():
     try:
-        url = 'https://www.taiwanlottery.com.tw/Lotto/Lotto649/history.aspx'
+        url = 'https://www.taiwanlottery.com.tw/lotto/lotto649/history.aspx'
         resp = requests.get(url)
-        soup = BeautifulSoup(resp.text,'lxml')
-        trs = soup.find('table',class_="table_org td_hm").find_all('tr')
-        date = [td.text.strip() for td in trs[0].find_all('td')]
-        data1=[td.text.strip() for td in trs[1].find_all('td')]
-        data2=[td.text.strip() for td in trs[4].find_all('td')[1:]]
+        soup = BeautifulSoup(resp.text, 'lxml')
+        trs = soup.find('table', class_="table_org td_hm").find_all('tr')
+        data1 = [td.text.strip() for td in trs[0].find_all('td')]
+        data2 = [td.text.strip() for td in trs[1].find_all('td')]
+        numbers = [td.text.strip() for td in trs[4].find_all('td')][1:]
         data = ''
-        for i in range(len(date)):
-            data +=f'{date[i]}:{data1[i]}\n'
-        data += ','.join(data2[:-1])+ ' 特別號:'+ data2[-1]
+        for i in range(len(data1)):
+            data += f'{data1[i]}:{data2[i]}\n'
+        data += ','.join(numbers[:-1])+' 特別號:'+numbers[-1]
         print(data)
+
         return data
     except Exception as e:
         print(e)
-        return  "取得大樂透號碼，請稍後再試..."
-@csrf_exempt
+        return '取得大樂透號碼，請稍後在試...'
+
 
 def lottery(request):
-    text = BigLottery().replace('\n','<br>')
-    return HttpResponse(f'<h1>{BigLottery()}</h1>')
+    text = get_biglottery().replace('\n', '<br>')
+    return HttpResponse(f'<h1>{text}</h1>')
 
+
+@csrf_exempt
 def callback(request):
     if request.method == 'POST':
         signature = request.META['HTTP_X_LINE_SIGNATURE']
@@ -50,10 +53,6 @@ def callback(request):
             return HttpResponseBadRequest()
         for event in events:
             if isinstance(event, MessageEvent):
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(text=event.message.text)
-                )
                 text = event.message.text
                 message = None
                 print(text)
@@ -66,21 +65,19 @@ def callback(request):
                 elif '早安' in text:
                     message = '早安你好!'
                 elif '捷運' in text:
-                    # 台北/台中/高雄
-                        mrts={
-                            '台北捷運':'https://cg2010studio.files.wordpress.com/2011/12/mrt.png',
-                            '台中捷運':'https://buuz.tw/wp-content/uploads/20201110204645_26.png',
-                            '高雄捷運':'https://tw.images.search.yahoo.com/search/images;_ylt=Awrt4BGaX01kqVQ2nm1t1gt.;_ylu=c2VjA3NlYXJjaARzbGsDYnV0dG9u;_ylc=X1MDMjExNDcwNTAwNQRfcgMyBGZyA21jYWZlZQRmcjIDcDpzLHY6aSxtOnNiLXRvcARncHJpZANiVUlWOU9zbVRhdVZOUEZrVVhnT09BBG5fcnNsdAMwBG5fc3VnZwMzBG9yaWdpbgN0dy5pbWFnZXMuc2VhcmNoLnlhaG9vLmNvbQRwb3MDMARwcXN0cgMEcHFzdHJsAzAEcXN0cmwDNwRxdWVyeQMlRTklQUIlOTglRTklOUIlODQlRTYlOEQlQjclRTklODElOEIlRTglQjclQUYlRTclQjclOUElRTUlOUMlOTYEdF9zdG1wAzE2ODI3OTIzNzc-?p=%E9%AB%98%E9%9B%84%E6%8D%B7%E9%81%8B%E8%B7%AF%E7%B7%9A%E5%9C%96&fr=mcafee&fr2=p%3As%2Cv%3Ai%2Cm%3Asb-top&ei=UTF-8&x=wrt&type=E211TW885G0#id=1&iurl=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2F3%2F33%2F%25E9%25AB%2598%25E9%259B%2584%25E6%258D%25B7%25E9%2581%258B%25E8%25B7%25AF%25E7%25B6%25B2%25E5%259C%2596_(C1-C14%25E7%25AB%2599%25E5%2590%258D%25E7%25A2%25BA%25E5%25AE%259A%25E7%2589%2588).png&action=click'
-                        }
-                        image_url = 'https://web.metro.taipei/pages/assets/images/routemap2023n.png'
-                        for mrt in mrts:
-                            print(mrt)
-                            if mrt in text:
-                                image_url  = mrts[mrt]
-                                print(image_url)
-                                break
+                    mrts = {
+                        '台北': 'https://web.metro.taipei/pages/assets/images/routemap2023n.png',
+                        '台中': 'https://assets.piliapp.com/s3pxy/mrt_taiwan/taichung/20201112_zh.png?v=2',
+                        '高雄': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/%E9%AB%98%E9%9B%84%E6%8D%B7%E9%81%8B%E8%B7%AF%E7%B6%B2%E5%9C%96_%282020%29.png/550px-%E9%AB%98%E9%9B%84%E6%8D%B7%E9%81%8B%E8%B7%AF%E7%B6%B2%E5%9C%96_%282020%29.png'
+                    }
+
+                    image_url = 'https://web.metro.taipei/pages/assets/images/routemap2023n.png'
+                    for mrt in mrts:
+                        if mrt in text:
+                            image_url = mrts[mrt]
+                            break
                 elif '樂透' in text:
-                    message = BigLottery()
+                    message = get_biglottery()
                 else:
                     message = '抱歉，我不知道你說甚麼?'
 
@@ -90,7 +87,6 @@ def callback(request):
                     message_obj = TextSendMessage(text=message)
 
                 line_bot_api.reply_message(event.reply_token, message_obj)
-
         return HttpResponse()
     else:
         return HttpResponseBadRequest()
