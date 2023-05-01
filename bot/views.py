@@ -68,7 +68,9 @@ def callback(request):
                     mrts = {
                         '台北': 'https://web.metro.taipei/pages/assets/images/routemap2023n.png',
                         '台中': 'https://assets.piliapp.com/s3pxy/mrt_taiwan/taichung/20201112_zh.png?v=2',
-                        '高雄': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/%E9%AB%98%E9%9B%84%E6%8D%B7%E9%81%8B%E8%B7%AF%E7%B6%B2%E5%9C%96_%282020%29.png/550px-%E9%AB%98%E9%9B%84%E6%8D%B7%E9%81%8B%E8%B7%AF%E7%B6%B2%E5%9C%96_%282020%29.png'
+                        '高雄': 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/%E9%AB%98%E9%9B%84%E6%8D%B7%E9%81%8B%E8%B7%AF%E7%B6%B2%E5%9C%96_%282020%29.png/550px-%E9%AB%98%E9%9B%84%E6%8D%B7%E9%81%8B%E8%B7%AF%E7%B6%B2%E5%9C%96_%282020%29.png',
+                        '新北':'https://sw.cool3c.com/user/100672/2020/39b82064-f1bd-42e7-b28d-a3c8d92aea2c.jpg',
+                        '桃園':'https://img.ltn.com.tw/Upload/liveNews/BigPic/600_2478894_5.jpg'
                     }
 
                     image_url = 'https://web.metro.taipei/pages/assets/images/routemap2023n.png'
